@@ -3,7 +3,7 @@
 //temporary
 #define CHECK
 
-#include "include/KDTree.hh"
+#include "KDTree.hh"
 #include <math.h>
 
 //We are usually interested by performances
