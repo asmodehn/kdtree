@@ -1,8 +1,5 @@
 /*This is a test/benchmark program for the KDTree implementation*/
 
-//temporary
-//#define CHECK
-
 #include "KDTree.hh"
 #include <math.h>
 
@@ -51,7 +48,8 @@ public:
 
 
 // Test program
-//If we are building on Windows
+//If we are building on Windows with mingw32 (devcpp). version 3.3 (devcpp5) is
+//necessary since remainderf is not in 3.0
 
 #ifdef  __MINGW32__
 #define srandom srand
@@ -62,8 +60,8 @@ public:
 time_t begin;
 time_t end;
 
-#define MAX 100000 //maximum number of voxels
-#define MAXQ 200//(64*48)//max number of requests
+#define MAX 500000 //maximum number of voxels
+#define MAXQ 1000//(64*48)//max number of requests
 #define MAXC 1000.0f //rem coordinates -> coord [ -MAXC/2 , MAXC/2 ]
 #define RAYON 10.0f//search RAYON
 
@@ -181,7 +179,6 @@ int main (int argc, char** argv)
 	reslist.open(FILENAME_LIST_RES, ios::out | ios::trunc);
 	if (!reslist.is_open()){ cerr << "Unable to open the list results file"<<endl; exit(1);}
 	float lsum=0.0;
-	float lnbressum=0.0;
 	curPct=-1;
 	for (int i=0;i<MAXQ;i++)
 	{
@@ -210,8 +207,6 @@ int main (int argc, char** argv)
 			reslist << ' ' << grabbed << ' ' << lresult[k];
 			reslist << ' ' << dist << ' ' << ldists[k] << endl;
 		}
-		//We sum results number to compute a mean later...
-		lnbressum+=lresult.size();
 	}		 
 	reslist.close();
 	cout << "\b\b\b\b\t100%" << endl;
@@ -229,7 +224,6 @@ int main (int argc, char** argv)
 	if (!restree.is_open()){ cerr << "Unable to open the tree results file"<<endl; exit(1);}
 #endif	
 	float sum=0.0;
-	float nbressum=0.0;
 	curPct=-1;
 	for (int i=0;i<MAXQ;i++)
 	{
@@ -259,9 +253,8 @@ int main (int argc, char** argv)
 			restree << ' ' << dist << ' ' << dists[k] << endl;
 		}
 #endif
-		//We sum results number to compute a mean later...
-		nbressum+=result.size();
 	}		 
+	
 #ifdef CHECK	
 	restree.close();
 #endif	
@@ -269,7 +262,7 @@ int main (int argc, char** argv)
 	//Then we can print KDTree results
 	cout << MAXQ <<" queries done..." << endl;
 	cout << "KDTree Duration : Total = " << sum << " Mean = "<< sum / MAXQ << endl;
-	cout << endl << "Mean number of query results = " << nbressum/MAXQ << endl;
+	cout << endl << "Mean number of query results = " << result.size()/MAXQ << endl;
 	
 #ifdef CHECK
 	//We need to compare the results
