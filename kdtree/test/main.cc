@@ -49,6 +49,9 @@ time_t end;
 #define MAXC 1000.0f //rem coordinates -> coord [ -MAXC/2 , MAXC/2 ]
 #define RAYON 10.0f//search RAYON
 
+#define FILENAME_LIST_RES "list.res"
+#define FILENAME_TREE_RES "tree.res"
+
 #define SIZECOORDSUP 3*(1+ 1+ static_cast<int> (logf((MAXC/2.f)/logf(10.f))))
 #define SIZEFLOAT 7
 #define SIZENEWLINE 1 /*unix*/
@@ -85,7 +88,7 @@ int main (int argc, char** argv)
 	//TODO : grab this signal...
 	
 	KDTree<Voxel> t;
-	srandom(1);
+	srandom(time(NULL));
 	vector<Voxel> list;
 	cout << "Creating list of " << MAX << " Voxels..." << endl;
 	begin=time(NULL);
@@ -149,13 +152,14 @@ int main (int argc, char** argv)
 	int curPct;
 	
 	
-	cout << "Querying List...\t";
+	cout << endl << "Querying List...\t";
 	//First we will search in the list
 	vector<Voxel> lresult;
 	vector<float> ldists;
 	//File for results storage
-	ofstream reslist("list.res");
-	if (!reslist){ cerr << "Unable to open the list results file"<<endl; exit(1);}
+	fstream reslist;
+	reslist.open(FILENAME_LIST_RES, ios::out | ios::trunc);
+	if (!reslist.is_open()){ cerr << "Unable to open the list results file"<<endl; exit(1);}
 	float lsum=0.0;
 	float lnbressum=0.0;
 	curPct=-1;
@@ -205,8 +209,9 @@ int main (int argc, char** argv)
 	vector<Voxel> result;
 	vector<float> dists;
 	//File for results storage
-	ofstream restree("tree.res");
-	if (!restree){ cerr << "Unable to open the tree results file"<<endl; exit(1);}
+	fstream restree;
+	restree.open(FILENAME_TREE_RES, ios::out | ios::trunc);
+	if (!restree.is_open()){ cerr << "Unable to open the tree results file"<<endl; exit(1);}
 	
 	float sum=0.0;
 	float nbressum=0.0;
@@ -242,18 +247,47 @@ int main (int argc, char** argv)
 	}		 
 	restree.close();
 	cout << "\b\b\b\b\t100%" << endl;
+	//Then we can print KDTree results
+	cout << MAXQ <<" queries done..." << endl;
+	cout << "KDTree Duration : Total = " << sum << " Mean = "<< sum / MAXQ << endl;
+	cout << endl << "Mean number of query results = " << nbressum/MAXQ << endl;
 	
 #ifdef CHECK
 	//We need to compare the results
 	cout << "You can now compare the results in the .res file..." << endl;
-	//TODO special diff program (same solutions, but not in the same order...)
+	//INWORK special diff program (same solutions, but not in the same order...)
+	//1 - Open the files restree & reslist
+	reslist.open(FILENAME_LIST_RES, ios::in);
+	restree.open(FILENAME_TREE_RES, ios::in);
+	if( ! (reslist.is_open() && restree.is_open() ) ) exit(1);
+	//2 - Testing the size of the files, must be exactly the same...
+	long l,m, sizl, sizt;
 	
+	l = reslist.tellg();reslist.seekg (0, ios::end); 
+	m = reslist.tellg();
+    cout << "size of " << FILENAME_LIST_RES << " is " << (sizl=m-l) << " bytes.\n";
+	reslist.seekg(ios::beg);
+	
+	l = restree.tellg();restree.seekg (0, ios::end); 
+	m = restree.tellg();
+    cout << "size of " << FILENAME_TREE_RES << " is " << (sizt=m-l) << " bytes.\n";
+	restree.seekg(ios::beg);
+	
+	//3 - Test ARE in the same order -> compare requests results one by one
+	char bufferl[256];
+	char buffert[256];
+	
+	while (! (reslist.eof() || reslist.eof() ) )
+	{
+		reslist.getline(bufferl, 255);
+		restree.getline(buffert, 255);
+		//TODO : Use them...
+	}
+	//4 - Close the files restree & reslist
+	reslist.close();
+	restree.close();
 #endif	
 	
-	//Then we can print KDTree results
-	cout << MAXQ <<" queries done..." << endl;
-	cout << "KDTree Duration : Total = " << sum << " Mean = "<< sum / MAXQ << endl;
-	cout << "Mean number of query results = " << nbressum/MAXQ << endl;
 		
 	cout << "End : Freeing Memory..." << endl;
     return 0;
