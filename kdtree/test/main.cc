@@ -51,6 +51,13 @@ public:
 
 
 // Test program
+//If we are building on Windows
+
+#ifdef  __MINGW32__
+#define srandom srand
+#define random rand
+#endif
+
 #include <time.h>
 time_t begin;
 time_t end;
@@ -119,8 +126,8 @@ int main (int argc, char** argv)
 	for( int i = 0; i < MAX; i++ )
 	{
 		//cout << "Inserting " << v <<endl;
-		KDObject<Voxel> obj(list.at(i));
-		obj[0]=list.at(i).x;obj[1]=list.at(i).y;obj[2]=list.at(i).z;
+		KDObject<Voxel> obj(list[i]);
+		obj[0]=list[i].x;obj[1]=list[i].y;obj[2]=list[i].z;
 		t.insert( obj );
     }
 	end=time(NULL);
@@ -234,7 +241,7 @@ int main (int argc, char** argv)
 #endif
 		//Search in the tree
 		begin=time(NULL);
-		vector<KDObjDist<Voxel> > res=t.findNear(testlist.at(i),RAYON);
+		vector<KDObjDist<Voxel> > res=t.findNear(testlist[i],RAYON);
 		int found=res.size();
 		for (int k=0;k<found;k++)
 		{
