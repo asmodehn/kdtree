@@ -1,11 +1,12 @@
 /*This is a test/benchmark program for the KDTree implementation*/
 
 //temporary
-#define CHECK
+//#define CHECK
 
 #include "KDTree.hh"
 #include <math.h>
 
+//Sanity checks
 //We are usually interested by performances
 #ifndef CHECK
 #define PERF
@@ -83,7 +84,7 @@ void printpercent(int curPct,const int i)
 
 int main (int argc, char** argv)
 {
-	cout << "This is a test program for the KDTree Imlementation." << endl;
+	cout << endl << "This is a test program for the KDTree Imlementation." << endl;
 	
 	const string grabbed="Grabbed";
 	const string dist="distance";
@@ -97,11 +98,12 @@ int main (int argc, char** argv)
 #endif
 	cout << "Press Ctrl-C to abort..." << endl;
 	//TODO : grab this signal...
+	cout << endl;
 	
 	KDTree<Voxel> t;
 	srandom(time(NULL));
 	vector<Voxel> list;
-	cout << "Creating list of " << MAX << " Voxels..." << endl;
+	cout << "Creating list of " << MAX << " Voxels...";flush(cout);
 	begin=time(NULL);
 	for( int i = 0; i < MAX; i++ )
 	{
@@ -112,7 +114,7 @@ int main (int argc, char** argv)
 	cout << "Done" << endl;
 	cout<<"Computing Time spend = "<<difftime(end,begin)<< " seconds"<<endl;
 	
-    cout << "Creating tree of " << MAX<< " Voxels..." << endl;
+    cout << "Inserting " << MAX<< " Voxels in a KDTree...";flush(cout);
     begin=time(NULL);
 	for( int i = 0; i < MAX; i++ )
 	{
@@ -125,19 +127,19 @@ int main (int argc, char** argv)
 	cout << "Done" << endl;
 	cout<<"Computing Time spend = "<<difftime(end,begin)<< " seconds"<<endl;
 	
-	//Affichage des stats sur le KDTree
-	cout << "KDTree statistics : " << endl;
+	//Displaying stats about the KDTree
+	cout << endl << "KDTree statistics : " << endl;
 	begin=time(NULL);
 	t.stats();
 	end=time(NULL);
 	cout<<"Computing Time spend = "<<difftime(end,begin)<< " seconds"<<endl;
 
-	//on balance
-	cout << "Balancing...";flush(cout);
+	//Optimizing the KDTree for research (theorically not exactly balanced)
+	cout << endl << "Balancing...";flush(cout);
 	t.balance();
 	cout << "Done" << endl;
 
-	//Affichage des stats sur le KDTree
+	//Displaying stats about the KDTree
 	cout << "KDTree statistics : " << endl;
 	begin=time(NULL);
 	t.stats();
@@ -162,7 +164,7 @@ int main (int argc, char** argv)
 	float tmp=0.0;
 	int curPct;
 	
-	
+#ifdef CHECK	
 	cout << endl << "Querying List...\t";
 	//First we will search in the list
 	vector<Voxel> lresult;
@@ -178,11 +180,9 @@ int main (int argc, char** argv)
 	{
 		//Display of the current percentage
 		printpercent(curPct,i);
-		
 		reslist << ' ' << wanted << ' ' << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << "\n"; //not endl to use the full buffer and speed up execution
-		
-		//Search in list
 		int ind=lresult.size();
+		//Search in list
 		int lfound=0;
 		begin=time(NULL);
 		for ( unsigned int k=0;k<list.size();k++)
@@ -198,32 +198,29 @@ int main (int argc, char** argv)
 		//We sum the duration to compute a mean later
 		tmp=difftime(end,begin);
 		lsum+=(tmp<0)?0:tmp;
-		
 		for ( int k=ind;k<ind+lfound;k++)
 		{
 			reslist << ' ' << grabbed << ' ' << lresult[k];
 			reslist << ' ' << dist << ' ' << ldists[k] << endl;
 		}
-								
 		//We sum results number to compute a mean later...
 		lnbressum+=lresult.size();
 	}		 
 	reslist.close();
-	
 	cout << "\b\b\b\b\t100%" << endl;
 	cout << MAXQ <<" queries done..." << endl;
 	cout << "List Duration : Total = " << lsum << " Mean = " << lsum/MAXQ << endl;
-	cout << endl;
-	
-	cout << "Querying Tree...\t";
+#endif	
+	cout << endl << "Querying Tree...\t";
 	//Second we will search in the tree
 	vector<Voxel> result;
 	vector<float> dists;
+#ifdef CHECK
 	//File for results storage
 	fstream restree;
 	restree.open(FILENAME_TREE_RES, ios::out | ios::trunc);
 	if (!restree.is_open()){ cerr << "Unable to open the tree results file"<<endl; exit(1);}
-	
+#endif	
 	float sum=0.0;
 	float nbressum=0.0;
 	curPct=-1;
@@ -231,11 +228,11 @@ int main (int argc, char** argv)
 	{
 		//Display of the current percentage
 		printpercent(curPct,i);
-	
+#ifdef CHECK
 		restree << ' ' << wanted << ' ' << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << "\n";//not endl to use the full buffer and speed up execution
-				
-		//Search in the tree
 		int ind=result.size();
+#endif
+		//Search in the tree
 		begin=time(NULL);
 		vector<KDObjDist<Voxel> > res=t.findNear(testlist.at(i),RAYON);
 		int found=res.size();
@@ -248,15 +245,19 @@ int main (int argc, char** argv)
 		end=time(NULL);
 		tmp=difftime(end,begin);
 		sum+=(tmp<0)?0:tmp; //to avoide some negative time measures on short duration
+#ifdef CHECK
 		for (int k=ind;k<ind+found;k++)
 		{
 			restree << ' ' << grabbed << ' ' << result[k];
 			restree << ' ' << dist << ' ' << dists[k] << endl;
 		}
+#endif
 		//We sum results number to compute a mean later...
 		nbressum+=result.size();
 	}		 
+#ifdef CHECK	
 	restree.close();
+#endif	
 	cout << "\b\b\b\b\t100%" << endl;
 	//Then we can print KDTree results
 	cout << MAXQ <<" queries done..." << endl;
@@ -358,6 +359,7 @@ int main (int argc, char** argv)
 		else
 		{ //Must not happen
 			cerr << "ERROR while reading results files. Check the syntax" << endl;
+			exit(2);
 		}
 	}
 	/*UGLY*/
