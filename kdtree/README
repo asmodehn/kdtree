@@ -43,7 +43,10 @@ Just after a release untar :
 Just type :
 
 ./configure
-make all
+make
+make check
+
+This will test the KDTree implementation
 
 ======================
 Making a distribution |
