@@ -16,7 +16,7 @@
 #endif
 
 #include <iostream>
-
+#include <string>
 #ifdef CHECK
 #include <fstream> // needed only for checking purpose...
 #endif
@@ -49,8 +49,9 @@ time_t end;
 #define MAXC 1000.0f //rem coordinates -> coord [ -MAXC/2 , MAXC/2 ]
 #define RAYON 10.0f//search RAYON
 
-//temporary
-#define X 8
+#define SIZECOORDSUP 3*(1+ 1+ static_cast<int> (logf((MAXC/2.f)/logf(10.f))))
+#define SIZEFLOAT 7
+#define SIZENEWLINE 1 /*unix*/
 
 float distance(const float* coords, const Voxel& v)
 {
@@ -70,8 +71,16 @@ void printpercent(int curPct,const int i)
 int main (int argc, char** argv)
 {
 	cout << "This is a test program for the KDTree Imlementation." << endl;
-	cout << "At least "<< MAX * sizeof(Voxel) * 2 << " B of memory are required to process."<<endl;
-	cout << "And about "<< MAXQ * (16 + X*3)* MAX/MAXC *RAYON * (24+X) <<" B of disk space to store the results " << endl;
+	
+	string grabbed="Grabbed : ";
+	string dist=" | distance = ";
+	string wanted="Wanted near : ";
+	//TODO : this could be better estimated...
+	cout << "At least "<< MAX * sizeof(Voxel) * 2 / (1024*1024) << " MB of memory are required to process."<<endl;
+#ifdef CHECK
+	//This seems to be quite good
+	cout << "And about "<< MAXQ * ((sizeof(wanted) +SIZECOORDSUP+SIZENEWLINE) + static_cast<int> (MAX/MAXC *RAYON) * (sizeof(grabbed)+SIZECOORDSUP+sizeof(dist)+SIZEFLOAT+SIZENEWLINE/*lf*/)) /(1024*1024) <<" MB of disk space to store the results " << endl;
+#endif
 	cout << "Press Ctrl-C to abort..." << endl;
 	//TODO : grab this signal...
 	
@@ -152,12 +161,12 @@ int main (int argc, char** argv)
 	curPct=-1;
 	for (int i=0;i<MAXQ;i++)
 	{
-		//Affichage du pourcentage courant
+		//Display of the current percentage
 		printpercent(curPct,i);
 		
-		reslist << "Wanted Near : " << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << endl;
+		reslist << wanted << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << endl;
 		
-		//Recherche dans la liste
+		//Search in list
 		int ind=lresult.size();
 		int lfound=0;
 		begin=time(NULL);
@@ -171,23 +180,23 @@ int main (int argc, char** argv)
 			}
 		}
 		end=time(NULL);
-		//On somme les durees pour moyenne apres
+		//We sum the duration to compute a mean later
 		tmp=difftime(end,begin);
 		lsum+=(tmp<0)?0:tmp;
 		
 		for ( int k=ind;k<ind+lfound;k++)
 		{
-			reslist << "Grabbed : " << lresult[k];
-			reslist << " | distance = " << ldists[k] << endl;
+			reslist << grabbed << lresult[k];
+			reslist << dist << ldists[k] << endl;
 		}
 								
-		//On rajoute le nombre de resultats pour la moyenne plus tard...
+		//We sum results number to compute a mean later...
 		lnbressum+=lresult.size();
 	}		 
 	reslist.close();
 	
 	cout << "\b\b\b\b\t100%" << endl;
-	cout << MAXQ <<" queries done without errors..." << endl;
+	cout << MAXQ <<" queries done..." << endl;
 	cout << "List Duration : Total = " << lsum << " Mean = " << lsum/MAXQ << endl;
 	cout << endl;
 	
@@ -204,10 +213,10 @@ int main (int argc, char** argv)
 	curPct=-1;
 	for (int i=0;i<MAXQ;i++)
 	{
-		//Affichage du pourcentage courant
+		//Display of the current percentage
 		printpercent(curPct,i);
 	
-		restree << "Wanted Near : " << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << endl;
+		restree << wanted << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << endl;
 				
 		//Search in the tree
 		int ind=result.size();
@@ -222,13 +231,13 @@ int main (int argc, char** argv)
 		}
 		end=time(NULL);
 		tmp=difftime(end,begin);
-		sum+=(tmp<0)?0:tmp; //pour eviter les betises de difftime sur des temps trop courts
+		sum+=(tmp<0)?0:tmp; //to avoide some negative time measures on short duration
 		for (int k=ind;k<ind+found;k++)
 		{
-			restree << "Grabbed : " << result[k];
-			restree << " | distance = " << dists[k] << endl;
+			restree << grabbed << result[k];
+			restree << dist << dists[k] << endl;
 		}
-		//On rajoute le nombre de resultats pour la moyenne plus tard...
+		//We sum results number to compute a mean later...
 		nbressum+=result.size();
 	}		 
 	restree.close();
