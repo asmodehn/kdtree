@@ -4,18 +4,18 @@ Contents |
 =========
 
 AUTHORS : List of developers with mail adress
-COPYING : 
+COPYING : License
 CVS : the CVS informations
 ChangeLog : the ChangeLog ^^
-INSTALL : 
+INSTALL : How to use this software
 Makefile.am : automake Input File
-NEWS :
+NEWS : Last news about this software
 README : this file
 TODO :  a "todo" list
 bootstrap : script to generate configure script from cvs repository checkout
 config/ : to store some autotools generated files
 configure.ac : autoconf Input File
-doc : to store documentation about code only (cf doxygen, texinfo, etc.). Not to store a website discussing about it. Just use a separate CVS for the latter.
+doc : to store documentation about code only (cf doxygen, texinfo, etc.). Not to store a website discussing about it. Just use the separate gna CVS for the latter if needed.
 src : to store code...
 test : to store self test suite code.
 

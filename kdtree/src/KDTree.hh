@@ -134,7 +134,7 @@ template <class Object> class KDTree
 };
 
 //Because of the template class, implementation must be here :(
-#pragma implementation
+//#pragma implementation // seems to be unneeded on my OS, it works fine without it.
 #include "KDTree.cc"
 
 #endif /* !KDTREE_HH */

@@ -31,10 +31,20 @@ public:
 	static const Voxel ERROR;
 	float x,y,z;//Not needed, already in KDObject, just for testing purpose
 	Voxel (float a=0, float b=0, float c=0) : x(a), y(b), z(c) {}
+	
+	bool operator == (const Voxel& v)
+	{
+		return ((v.x == x) && (v.y == y) && (v.z == z));
+	}	
 	friend ostream & operator << (ostream &out, const Voxel &v)
 	{
 		out << v.x << ' ' << v.y << ' ' << v.z;
-		return out;
+		return out; //needed for chaining
+	}
+	friend istream & operator >> (istream &in, Voxel &v)
+	{
+		in >> v.x >> v.y >> v.z;
+		return in; //needed for chaining
 	}
 };
 
@@ -75,9 +85,10 @@ int main (int argc, char** argv)
 {
 	cout << "This is a test program for the KDTree Imlementation." << endl;
 	
-	string grabbed="Grabbed : ";
-	string dist=" | distance = ";
-	string wanted="Wanted near : ";
+	const string grabbed="Grabbed";
+	const string dist="distance";
+	const string wanted="Wanted";
+	
 	//TODO : this could be better estimated...
 	cout << "At least "<< MAX * sizeof(Voxel) * 2 / (1024*1024) << " MB of memory are required to process."<<endl;
 #ifdef CHECK
@@ -168,7 +179,7 @@ int main (int argc, char** argv)
 		//Display of the current percentage
 		printpercent(curPct,i);
 		
-		reslist << wanted << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << endl;
+		reslist << ' ' << wanted << ' ' << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << "\n"; //not endl to use the full buffer and speed up execution
 		
 		//Search in list
 		int ind=lresult.size();
@@ -190,8 +201,8 @@ int main (int argc, char** argv)
 		
 		for ( int k=ind;k<ind+lfound;k++)
 		{
-			reslist << grabbed << lresult[k];
-			reslist << dist << ldists[k] << endl;
+			reslist << ' ' << grabbed << ' ' << lresult[k];
+			reslist << ' ' << dist << ' ' << ldists[k] << endl;
 		}
 								
 		//We sum results number to compute a mean later...
@@ -221,7 +232,7 @@ int main (int argc, char** argv)
 		//Display of the current percentage
 		printpercent(curPct,i);
 	
-		restree << wanted << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << endl;
+		restree << ' ' << wanted << ' ' << testlist.at(i)[0] << ' ' << testlist.at(i)[1] <<' ' << testlist.at(i)[2] << "\n";//not endl to use the full buffer and speed up execution
 				
 		//Search in the tree
 		int ind=result.size();
@@ -239,8 +250,8 @@ int main (int argc, char** argv)
 		sum+=(tmp<0)?0:tmp; //to avoide some negative time measures on short duration
 		for (int k=ind;k<ind+found;k++)
 		{
-			restree << grabbed << result[k];
-			restree << dist << dists[k] << endl;
+			restree << ' ' << grabbed << ' ' << result[k];
+			restree << ' ' << dist << ' ' << dists[k] << endl;
 		}
 		//We sum results number to compute a mean later...
 		nbressum+=result.size();
@@ -274,15 +285,82 @@ int main (int argc, char** argv)
 	restree.seekg(ios::beg);
 	
 	//3 - Test ARE in the same order -> compare requests results one by one
-	char bufferl[256];
-	char buffert[256];
+	Voxel voxtmpl,voxtmpt;
+	string tmpl,tmpt;
+	float disttmpl,disttmpt;
+	vector<Voxel> voxl,voxt;
+	vector<float> distl,distt;
+	bool found=false;
 	
-	while (! (reslist.eof() || reslist.eof() ) )
-	{
-		reslist.getline(bufferl, 255);
-		restree.getline(buffert, 255);
-		//TODO : Use them...
+	// checking results files
+	//UGLY
+	while (! (reslist.eof() || restree.eof()) )
+	{	
+		//TODO : print current line...
+		/*UGLY*/
+		reslist >> tmpl >> voxtmpl ; //cout << tmpl << endl;
+		restree >> tmpt >> voxtmpt ; //cout << tmpt <<endl;
+		if ((tmpl == wanted) && (tmpt == wanted))
+		{
+			//If this is the end of a grabbed list, we must compare results
+			if (found)
+			{
+				//We compare elements one by one
+				if ( voxl.size() != voxt.size() ) 
+				{
+					cerr << "ERROR : Not the same number of results found in tree and list"<< endl;
+					cerr << "Please check the " << FILENAME_LIST_RES << " and " << FILENAME_TREE_RES << " files." << endl;
+					exit(1);
+				}
+				for (unsigned int i=0; i<voxl.size() ; i++)
+				{
+					for (unsigned int j=0; j<voxt.size(); j++)
+					{	//found... go on to next one
+						if (voxl.at(i) == voxt.at(j))
+						{
+							found=true;
+							break;
+						}
+					}
+					if (found==false)
+					{	//not found
+						cerr << "ERROR : The voxel " << voxl.at(i) << " found in list, was not found in tree search results" << endl;
+						cerr << "Please check the " << FILENAME_LIST_RES << " and " << FILENAME_TREE_RES << " files." << endl;
+						exit(1);
+					}
+				}
+			//clear the vectors
+			voxl.clear();voxt.clear();distl.clear();distt.clear();
+
+			}
+			
+			//cout << wanted << ' ' <<  voxtmpl << "\t";
+			//cout << wanted << ' ' <<  voxtmpt << endl;
+
+			found=false;
+		}
+		else if ((tmpl == grabbed) && (tmpt == grabbed))
+		{
+			//cout << grabbed << ' ' <<  voxtmpl << "\t";
+			//cout << grabbed << ' ' <<  voxtmpt << endl;
+			found=true;
+			//Add voxel to vectors
+			voxl.push_back(voxtmpl);
+			voxt.push_back(voxtmpt);
+			//pick up the distances
+			reslist >> tmpl >> disttmpl; //cout << dist << ' ' << disttmpl << "\t";
+			restree >> tmpt >> disttmpt; //cout << dist << ' ' << disttmpt << endl;
+			//Add distances to vectors
+			distl.push_back(disttmpl);
+			distt.push_back(disttmpt);
+
+		}
+		else
+		{ //Must not happen
+			cerr << "ERROR while reading results files. Check the syntax" << endl;
+		}
 	}
+	/*UGLY*/
 	//4 - Close the files restree & reslist
 	reslist.close();
 	restree.close();
@@ -290,5 +368,7 @@ int main (int argc, char** argv)
 	
 		
 	cout << "End : Freeing Memory..." << endl;
+	//KDTree is deleted at the end, because it is a variable in this main function.
+	//Just check the memory to see if the delete function is working well ;)
     return 0;
 }

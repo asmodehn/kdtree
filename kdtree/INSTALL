@@ -1,6 +1,28 @@
+
+=================================================
+! This software is not intended to be installed !
+=================================================
+
+The only reusable part of it are the KDTree.h and KDTree.cc files in src,
+that you can add them to your softwares freely. You can also add KDTree.cc
+at the end of KDTree.h. I didnt do that here, because I don't understand
+completely how templates are working, and how to write quite portable templates.
+
+To test it just type :
+
+./configure
+make check
+
+This is explained in the README file.
+
+And please let me know what is ( or not ) working on your computer ;)
+asmodehn@gna.org
+Thank you.
+
+=====================ORIGINAL FSF INSTALL FILE=================================
+
 Installation Instructions
 *************************
-
 Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2004 Free
 Software Foundation, Inc.
 

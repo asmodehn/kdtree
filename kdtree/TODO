@@ -1,4 +1,8 @@
+Make a checking test and a performance test, with the main.cc and automake compilation options
+Use configure results in code...
+Check windows port (devcpp - mingw)...
+
 Use autobook hints to extend portability of the code.
 Read the last paper from INRIA about KDTree, to take the conclusions into account
-Add permanent task of code reviewing(to increase portability and clearness) and code optimising...
+gprof the kdtree ;)
 
