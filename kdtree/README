@@ -43,7 +43,6 @@ Just after a release untar :
 Just type :
 
 ./configure
-make
 make check
 
 This will test the KDTree implementation
