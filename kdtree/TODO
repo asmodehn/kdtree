@@ -1,0 +1,4 @@
+Use autobook hints to extend portability of the code.
+Read the last paper from INRIA about KDTree, to take the conclusions into account
+Add permanent task of code reviewing(to increase portability and clearness) and code optimising...
+

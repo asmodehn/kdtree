@@ -1,30 +1,6 @@
 template <class Object>
-#ifdef REC
-bool KDTree<Object>::insert(KDNode*& start, short dimstart, KDNode* node)
-{
-	//On insere d'abord ses fils s'il en a
-	if (node->left!=NULL)
-	{
-		insert(start,dimstart,node->left);
-		node->left=NULL;
-	}
-	if (node->right!=NULL)
-	{
-		insert(start,dimstart,node->right);
-		node->right=NULL;
-	}
-	
-	//Ensuite on l'insere lui...
-	if (start==NULL) start=node;
-	else if (node->data()[dimstart]<=start->data()[dimstart])
-		insert(start->left,(dimstart+1) % dimensions,node);
-	else
-		insert(start->right,(dimstart+1) % dimensions,node);
-	
-	return true;
-}
-#else
-bool KDTree<Object>::insert(KDNode* start, short dimstart, KDNode* node)
+bool
+KDTree<Object>::insert(KDNode* start, short dimstart, KDNode* node)
 {
 	//On detache le noeud a inserer si il etait attache
 	node->parent=NULL;
@@ -90,25 +66,9 @@ bool KDTree<Object>::insert(KDNode* start, short dimstart, KDNode* node)
 	
 	return true;
 }
-#endif
 template <class Object>
-#ifdef REC
-bool KDTree<Object>::minmax(KDNode* start, short dimstart, float* min,float* max)
-{
-	//On fait les test min / max
-	for (short i=0;i<dimensions;i++)
-	{
-		if (start->data()[i]<min[i]) min[i]=start->data()[i];
-		if (start->data()[i]>max[i]) max[i]=start->data()[i];
-	}
-
-	if(start->left!=NULL) minmax(start->left,(dimstart+1) % dimensions,min,max);
-	if(start->right!=NULL) minmax(start->right,(dimstart+1) % dimensions,min,max);
-	
-	return true;
-}
-#else
-bool KDTree<Object>::minmax(KDNode* start, short dimstart, float* min,float* max)
+bool
+KDTree<Object>::minmax(KDNode* start, short dimstart, float* min,float* max)
 {
 	short dim=dimstart;
 	//On detache le noeud de depart
@@ -150,29 +110,10 @@ bool KDTree<Object>::minmax(KDNode* start, short dimstart, float* min,float* max
 	start->parent=pmem;
 	return true;
 }
-#endif
+
 template <class Object>
-#ifdef REC
-bool KDTree<Object>::findNN(KDNode* start,short dimstart,const float* point,const KDNode*& neighbor, float& dist)
-{
-	//On fait les test de distance
-	float sum=start->data().dist(point);
-	if (sum <dist || neighbor==NULL) 
-	{
-		dist=sum;
-		neighbor=start;
-	}
-	
-	//On continue le parcours
-	if(start->left!=NULL && (dist>=0 && point[dimstart]-dist<= start->data()[dimstart] ))
-		findNN(start->left,(dimstart+1) % dimensions,point,neighbor,dist);
-	if(start->right!=NULL && (dist>=0 && point[dimstart]+dist> start->data()[dimstart] ))
-		findNN(start->right,(dimstart+1) % dimensions,point,neighbor,dist);
-	
-	return true;
-}
-#else
-bool KDTree<Object>::findNN(KDNode* start,short dimstart,const float* point,const KDNode*& neighbor, float& dist)
+bool
+KDTree<Object>::findNN(KDNode* start,short dimstart,const float* point,const KDNode*& neighbor, float& dist)
 {
 	int dim=dimstart;
 	//On detache le noeud de depart
@@ -213,33 +154,10 @@ bool KDTree<Object>::findNN(KDNode* start,short dimstart,const float* point,cons
 	start->parent=pmem;
 	return true;
 }
-#endif
-template <class Object>
-#ifdef REC
-bool KDTree<Object>::findNear(KDNode* start,short dimstart,const float* point, const float radius,vector< const KDNode*>& neighbor, vector<float>& dist)
-{
-	//On fait les test de distance
-	float sum=start->data().dist(point);
-	if (sum <=radius) 
-	{
-		dist.push_back(sum);
-		neighbor.push_back(start);
-	}
 
-	//On continue le parcours
-	if(start->left!=NULL && point[dimstart]-radius<=start->data()[dimstart])
-	{
-		findNear(start->left,(dimstart+1) % dimensions,point,radius,neighbor,dist);
-	}
-	if(start->right!=NULL && point[dimstart]+radius>start->data()[dimstart] )
-	{
-		findNear(start->right,(dimstart+1) % dimensions,point,radius,neighbor,dist);
-	}
-	
-	return true;
-}
-#else
-bool KDTree<Object>::findNear(KDNode* start,short dimstart,const float* point, const float radius,vector<const KDNode*>& neighbor, vector<float>& dist)
+template <class Object>
+bool
+KDTree<Object>::findNear(KDNode* start,short dimstart,const float* point, const float radius,vector<const KDNode*>& neighbor, vector<float>& dist)
 {
 	short dim=dimstart;
 	//On detache le noeud de depart
@@ -282,10 +200,9 @@ bool KDTree<Object>::findNear(KDNode* start,short dimstart,const float* point, c
 	
 	return true;
 }
-#endif
+
 //Recupere le pivot dans un sous arbre
 //Pivot = +proche du milieu de l'hyperrectangle du sous arbre
-#ifndef REC
 template <class Object>
 typename KDTree<Object>::KDNode* KDTree<Object>::pivot(const KDNode* start, short dimstart)
 {
@@ -305,64 +222,10 @@ typename KDTree<Object>::KDNode* KDTree<Object>::pivot(const KDNode* start, shor
 	
 	return const_cast<KDNode*>(piv);
 }
-#endif
-template <class Object>
-#ifdef REC
-bool KDTree<Object>::balance(KDNode*& start, short dimstart)
-{
 
-	//On recupere le pivot
-	float* min=new float[dimensions];
-	float* max=new float[dimensions];
-	//On cherche les dimensions de l'hyperrectangle du sous arbre
-	KDNode* piv=start;
-	
-	minmax(const_cast<KDNode*>(start),dimstart,min,max);
-	cout << "min = " << min[0] << ' '<< min[1] << ' '<< min[2] <<endl;
-	cout << "max = " << max[0] << ' '<< max[1] << ' '<< max[2] <<endl;
-	//Calcul du centre de dimstart
-	float* mid=new float[dimensions];
-	for (short i=0;i<dimensions;i++) mid[i]=(min[i]+max[i]) / 2.0f;
-	
-	//On cherche le plus proche voisin
-	float dist;
-	findNN(const_cast<KDNode*&>(start),dimstart,mid,piv,dist);
-	cout << "Pivot = " << mid[0] << ' '<< mid[1] << ' '<< mid[2] <<endl;
-	
-	//Il faut mettre le pivot a la place du noeud courant
-	//Le pivot est un NOEUD DESCENDANT DE START
-	//On echange les deux, les references feront le travail pour nous ;)
-	
-	//Sauvegarde des noeuds a reinserer plus tard
-	KDNode* swap=start;
-	KDNode* swapl=start->left;
-	KDNode* swapr=start->right;
-	KDNode* mempl=piv->left;
-	KDNode* mempr=piv->right;
-	
-	//Le pivot prend la place du noeud courant (OK pour le KDTree si les precond sont respectées)
-	cout << "On echange : start=piv" << endl;
-	start=piv;
-	
-	//On coupe les arbres dependants
-	start->left=NULL;start->right=NULL;
-	
-	//On les reinsere pour conserver un KDTree fiable
-	cout << "on insere les fils swap->left et swap->right" << endl;
-	if (swapl!=NULL) insert(start,dimstart,swapl);
-	if (swapr!=NULL) insert(start,dimstart,swapr);
-	if (swap!=NULL) insert(start,dimstart,swap);
-	if (mempl!=NULL) insert(start,dimstart,mempl);
-	if (mempr!=NULL) insert(start,dimstart,mempr);
-	
-	//On balance a gauche et a droite
-	if (start->left!=NULL) balance(start->left,(dimstart+1) % dimensions);
-	if (start->right!=NULL) balance(start->right,(dimstart+1) % dimensions);
-	
-	return true;
-}
-#else
-bool KDTree<Object>::balance(KDNode* start, short dimstart)
+template <class Object>
+bool
+KDTree<Object>::balance(KDNode* start, short dimstart)
 {
 	short dim=dimstart;
 	//On detache le noeud de depart
@@ -434,19 +297,10 @@ bool KDTree<Object>::balance(KDNode* start, short dimstart)
 	start->parent=pmem;
 	return true;
 }
-#endif
+
 template <class Object>
-#ifdef REC
-long KDTree<Object>::count(KDNode* start)
-{
-	long nbNodes=1;
-	if(start->left!=NULL) nbNodes+=count(start->left);
-	if(start->right!=NULL) nbNodes+=count(start->right);
-	//Sinon feuille
-	return nbNodes;
-}
-#else
-long KDTree<Object>::count(KDNode* start)
+long
+KDTree<Object>::count(KDNode* start)
 {
 	long nbNodes=0;
 	//On detache le noeud de depart
@@ -510,7 +364,7 @@ long KDTree<Object>::count(KDNode* start)
 	start->parent=pmem;
 	return nbNodes;
 }
-#endif
+
 
 //Fonctions publiques
 template <class Object>

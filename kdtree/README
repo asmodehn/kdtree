@@ -1,0 +1,50 @@
+
+=========
+Contents |
+=========
+
+AUTHORS : List of developers with mail adress
+COPYING : 
+ChangeLog : the ChangeLog ^^
+INSTALL : 
+Makefile.am : automake Input File
+NEWS :
+README : this file
+bootstrap : script to generate configure script from cvs repository checkout
+config/ : to store some autotools generated files
+configure.ac : autoconf Input File
+doc : to store documentation about code only (cf doxygen, texinfo, etc.). Not to store a website discussing about it. Just use a separate CVS for the latter.
+lib : to store libraries code is depending upon. None for the moment.
+src : to store code...
+test : to store self test suite code.
+
+Other files not listed here are auto-generated files by Autotools for a distribution.
+They are not in the CVS Repository.
+
+==============
+Build Process |
+==============
+
+For development purpose
+------------------------
+Just after a cvs update or checkout :
+
+- Use the bootstrap script the first time or
+- use "autoreconf" to build/rebuild configure and Makefile.inS if you change something in autotools chain
+
+For common users
+-----------------
+Just after a release untar :
+
+Just type :
+
+./configure
+make all
+
+======================
+Making a distribution |
+======================
+
+The above implies that we include autoconf/automake generated files in distribution (refer make dist for that)
+BUT those files are not in the cvs, since no work is done on it, to have a quite clean repository.
+
