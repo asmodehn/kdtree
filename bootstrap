@@ -1,0 +1,7 @@
+#!/bin/sh
+#TODO : replace this with autoreconf correct command...
+set -x
+aclocal -I config
+autoheader
+automake --add-missing --copy
+autoconf
